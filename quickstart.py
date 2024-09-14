@@ -11,7 +11,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 def setup_authentication():
   # The file token.json stores the user's access and refresh tokens, and is
@@ -34,16 +34,16 @@ def setup_authentication():
       token.write(creds.to_json())
   return creds
 
-def get_events(service):
+def get_events(service, amount):
   # Call the Calendar API
   now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-  print("Getting the upcoming 20 events")
+  print("Getting the upcoming " + str(amount) + " events")
   events_result = (
       service.events()
       .list(
           calendarId="primary",
           timeMin=now,
-          maxResults=20,
+          maxResults=amount,
           singleEvents=True,
           orderBy="startTime",
       )
@@ -56,7 +56,6 @@ def get_events(service):
     return
 
   content = ""
-  # Prints the start and name of the next 20 events
   for event in events:
     date_and_time = event["start"].get("dateTime", event["start"].get("date"))
     print(date_and_time, event["summary"])
@@ -71,6 +70,32 @@ def main():
 
   try:
     service = build("calendar", "v3", credentials=creds)
+    event = {
+      'summary': 'Google I/O 2015',
+      'location': '800 Howard St., San Francisco, CA 94103',
+      'description': 'A chance to hear more about Google\'s developer products.',
+      'start': {
+        'dateTime': '2024-09-10T09:00:00-04:00',
+        'timeZone': 'America/New_York',
+      },
+      'end': {
+        'dateTime': '2024-09-10T17:00:00-04:00',
+        'timeZone': 'America/New_York',
+      },
+      'recurrence': [
+        'RRULE:FREQ=DAILY;COUNT=2'
+      ],
+      'reminders': {
+        'useDefault': False,
+        'overrides': [
+          {'method': 'popup', 'minutes': 10},
+        ],
+      },
+    }
+
+    event = service.events().insert(calendarId='primary', body=event).execute()
+    print('Event created: %s' % (event.get('htmlLink')))
+
     content = get_events(service)
 
     input = getEventInput()
