@@ -2,3 +2,4 @@ venv/
 credentials.json
 launch.bat
 token.json
+.venv/
