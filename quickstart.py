@@ -1,5 +1,9 @@
 import datetime
 import os.path
+import requests
+import json
+
+from ai import accessAI
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -16,6 +20,7 @@ def main():
   Prints the start and name of the next 10 events on the user's calendar.
   """
   creds = None
+  content = ""
   # The file token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
   # time.
@@ -45,7 +50,7 @@ def main():
         .list(
             calendarId="primary",
             timeMin=now,
-            maxResults=10,
+            maxResults=100,
             singleEvents=True,
             orderBy="startTime",
         )
@@ -57,13 +62,19 @@ def main():
       print("No upcoming events found.")
       return
 
-    # Prints the start and name of the next 10 events
+    # Prints the start and name of the next 100 events
     for event in events:
       start = event["start"].get("dateTime", event["start"].get("date"))
       print(start, event["summary"])
-
+      content = content + " " + event["start"].get("dateTime", event["start"].get("date"))
+  
   except HttpError as error:
     print(f"An error occurred: {error}")
+  
+  query = "Organize these events "
+  aiRequestResult = accessAI(query + "" + content)
+
+  print(aiRequestResult)
 
 
 if __name__ == "__main__":
