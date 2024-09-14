@@ -4,3 +4,5 @@ launch.bat
 token.json
 .venv/
 __pycache__/
+__pycache__/ai.cpython-311.pyc
+__pycache__/ai.cpython-311.pyc
