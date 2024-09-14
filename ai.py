@@ -41,4 +41,4 @@ def accessAI(query):
     # Extract and print the text output 
     text_output = response_data['choices'][0]['message']['content']
 
-    print(text_output)
+    return(text_output)
