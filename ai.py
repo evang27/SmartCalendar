@@ -35,8 +35,14 @@ headers = {
 
 response = requests.request("POST", url, json=payload, headers=headers)
 
-print(response.text)
+# Print the raw response for debugging
+#print("Raw Response:")
+#print(response.text)
 
-message = json.load(response.text)
+# Parse the JSON response
+response_data = response.json()
 
-print(message)
+# Extract and print the text output
+text_output = response_data['choices'][0]['message']['content']
+print("Text Output:")
+print(text_output)
