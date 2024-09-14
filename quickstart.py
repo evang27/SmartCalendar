@@ -64,9 +64,10 @@ def main():
 
     # Prints the start and name of the next 100 events
     for event in events:
-      start = event["start"].get("dateTime", event["start"].get("date"))
-      print(start, event["summary"])
-      content = content + " " + event["start"].get("dateTime", event["start"].get("date"))
+      date_and_time = event["start"].get("dateTime", event["start"].get("date"))
+      print(date_and_time, event["summary"])
+      summary = event["summary"]
+      content = content + " " + date_and_time + " " + summary
   
   except HttpError as error:
     print(f"An error occurred: {error}")
