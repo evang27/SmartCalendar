@@ -13,14 +13,11 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
-creds = None
-service = None
-
 def setup_authentication():
   # The file token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
   # time.
-  global creds
+  creds = None
   if os.path.exists("token.json"):
     creds = Credentials.from_authorized_user_file("token.json", SCOPES)
   # If there are no (valid) credentials available, let the user log in.
@@ -35,6 +32,7 @@ def setup_authentication():
     # Save the credentials for the next run
     with open("token.json", "w") as token:
       token.write(creds.to_json())
+  return creds
 
 def get_events(service):
   # Call the Calendar API
@@ -69,10 +67,7 @@ def get_events(service):
 
 def main():
   """SmartCalendar"""
-  global creds
-  content = ""
-  
-  setup_authentication()
+  creds = setup_authentication()
 
   try:
     service = build("calendar", "v3", credentials=creds)
