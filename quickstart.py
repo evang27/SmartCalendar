@@ -78,7 +78,9 @@ def main():
     service = build("calendar", "v3", credentials=creds)
     content = get_events(service)
 
-    query = "Organize these events:\n"
+    input = getEventInput()
+
+    query = "Organize these events " + input + "\n"
     aiRequestResult = accessAI(query + "" + content)
     print(aiRequestResult)
 
