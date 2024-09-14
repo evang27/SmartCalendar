@@ -3,3 +3,4 @@ credentials.json
 launch.bat
 token.json
 .venv/
+__pycache__/
