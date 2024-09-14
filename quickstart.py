@@ -1,7 +1,5 @@
 import datetime
 import os.path
-import requests
-import json
 
 from ai import accessAI
 
@@ -14,16 +12,14 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
+creds = None
+service = None
 
-def main():
-  """Shows basic usage of the Google Calendar API.
-  Prints the start and name of the next 10 events on the user's calendar.
-  """
-  creds = None
-  content = ""
+def setup_authentication():
   # The file token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
   # time.
+  global creds
   if os.path.exists("token.json"):
     creds = Credentials.from_authorized_user_file("token.json", SCOPES)
   # If there are no (valid) credentials available, let the user log in.
@@ -39,44 +35,54 @@ def main():
     with open("token.json", "w") as token:
       token.write(creds.to_json())
 
+def get_events(service):
+  # Call the Calendar API
+  now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+  print("Getting the upcoming 20 events")
+  events_result = (
+      service.events()
+      .list(
+          calendarId="primary",
+          timeMin=now,
+          maxResults=20,
+          singleEvents=True,
+          orderBy="startTime",
+      )
+      .execute()
+  )
+  events = events_result.get("items", [])
+
+  if not events:
+    print("No upcoming events found.")
+    return
+
+  content = ""
+  # Prints the start and name of the next 20 events
+  for event in events:
+    date_and_time = event["start"].get("dateTime", event["start"].get("date"))
+    print(date_and_time, event["summary"])
+    summary = event["summary"]
+    content = content + " " + date_and_time + " " + summary + "\n"
+  
+  return content
+
+def main():
+  """SmartCalendar"""
+  global creds
+  content = ""
+  
+  setup_authentication()
+
   try:
     service = build("calendar", "v3", credentials=creds)
+    content = get_events(service)
 
-    # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
-    print("Getting the upcoming 10 events")
-    events_result = (
-        service.events()
-        .list(
-            calendarId="primary",
-            timeMin=now,
-            maxResults=100,
-            singleEvents=True,
-            orderBy="startTime",
-        )
-        .execute()
-    )
-    events = events_result.get("items", [])
+    query = "Organize these events:\n"
+    aiRequestResult = accessAI(query + "" + content)
+    print(aiRequestResult)
 
-    if not events:
-      print("No upcoming events found.")
-      return
-
-    # Prints the start and name of the next 100 events
-    for event in events:
-      date_and_time = event["start"].get("dateTime", event["start"].get("date"))
-      print(date_and_time, event["summary"])
-      summary = event["summary"]
-      content = content + " " + date_and_time + " " + summary
-  
   except HttpError as error:
     print(f"An error occurred: {error}")
-  
-  query = "Organize these events "
-  aiRequestResult = accessAI(query + "" + content)
-
-  print(aiRequestResult)
-
 
 if __name__ == "__main__":
   main()
