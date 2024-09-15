@@ -53,13 +53,13 @@ def get_events(service, amount):
   events = events_result.get("items", [])
 
   if not events:
-    #print("No upcoming events found.")
+    print("No upcoming events found.")
     return
 
   content = ""
   for event in events:
     date_and_time = event["start"].get("dateTime", event["start"].get("date"))
-    #print(date_and_time, event["summary"])
+    print(date_and_time, event["summary"])
     summary = event["summary"]
     content = content + " " + date_and_time + " " + summary + "\n"
   
