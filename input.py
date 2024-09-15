@@ -1,5 +1,5 @@
 
 def getEventInput():
-    userInputEvent = input("Input your event name, how long you think it will take, and when is the latest date it can be due: ")
+    userInputEvent = input("Describe an upcoming event, whether its homework, something you have to go to, or part of your daily routine: ")
 
     return userInputEvent

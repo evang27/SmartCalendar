@@ -1,5 +1,6 @@
 import datetime
 import os.path
+import json
 
 from ai import accessAI
 from input import getEventInput
@@ -52,13 +53,13 @@ def get_events(service, amount):
   events = events_result.get("items", [])
 
   if not events:
-    print("No upcoming events found.")
+    #print("No upcoming events found.")
     return
 
   content = ""
   for event in events:
     date_and_time = event["start"].get("dateTime", event["start"].get("date"))
-    print(date_and_time, event["summary"])
+    #print(date_and_time, event["summary"])
     summary = event["summary"]
     content = content + " " + date_and_time + " " + summary + "\n"
   
@@ -70,39 +71,49 @@ def main():
 
   try:
     service = build("calendar", "v3", credentials=creds)
-    event = {
-      'summary': 'Google I/O 2015',
-      'location': '800 Howard St., San Francisco, CA 94103',
-      'description': 'A chance to hear more about Google\'s developer products.',
-      'start': {
-        'dateTime': '2024-09-10T09:00:00-04:00',
-        'timeZone': 'America/New_York',
-      },
-      'end': {
-        'dateTime': '2024-09-10T17:00:00-04:00',
-        'timeZone': 'America/New_York',
-      },
-      'recurrence': [
-        'RRULE:FREQ=DAILY;COUNT=2'
-      ],
-      'reminders': {
-        'useDefault': False,
-        'overrides': [
-          {'method': 'popup', 'minutes': 10},
-        ],
-      },
-    }
 
-    event = service.events().insert(calendarId='primary', body=event).execute()
-    print('Event created: %s' % (event.get('htmlLink')))
-
-    content = get_events(service)
+    content = get_events(service, 50)
 
     input = getEventInput()
 
-    query = "Organize these events " + input + "\n"
-    aiRequestResult = accessAI(query + "" + content)
+    # event = {
+    #   'summary': 'Google I/O 2015',
+    #   'location': '800 Howard St., San Francisco, CA 94103',
+    #   'description': 'A chance to hear more about Google\'s developer products.',
+    #   'start': {
+    #     'dateTime': '2024-09-10T09:00:00-04:00',
+    #     'timeZone': 'America/New_York',
+    #   },
+    #   'end': {
+    #     'dateTime': '2024-09-10T17:00:00-04:00',
+    #     'timeZone': 'America/New_York',
+    #   },
+    #   'recurrence': [
+    #     'RRULE:FREQ=DAILY;COUNT=2'
+    #   ],
+    #   'reminders': {
+    #     'useDefault': False,
+    #     'overrides': [
+    #       {'method': 'popup', 'minutes': 10},
+    #     ],
+    #   },
+    # }
+
+    query = "It is currently: " + str(datetime.datetime.now()) + ".\nThe following is a list of the user's upcoming events:\n" + content + " Now, the following is a description of the event the user wants to add:\n" + input + "Create the json object for an upcoming event somewhere in the user's schedule that matches their description. Always try to have a minimum of 15 minutes between events where nothing is scheduled."
+    aiRequestResult = accessAI(query)
+  
+    if (aiRequestResult[:7] == '```json'):
+      aiRequestResult = aiRequestResult[8:]
+      print("stripped json beginning")
+
+    if (aiRequestResult[-3:] == '```'):
+      aiRequestResult = aiRequestResult[:-4]
+      print("stripped json ending")
+
     print(aiRequestResult)
+    event = json.loads(aiRequestResult)
+    event = service.events().insert(calendarId='primary', body=event).execute()
+    print('Event created: %s' % (event.get('htmlLink')))
 
   except HttpError as error:
     print(f"An error occurred: {error}")
